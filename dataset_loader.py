@@ -30,10 +30,12 @@ def load_trajectories(filenames):
             target_vals = path['target_val_q']
             n_data = target_vals.shape[0]
             obses, acts = path['obs'][:n_data], path['act'][:n_data]
+            # obses, acts = path['obs'][:n_data], path['sampled_act'][:n_data]
         else:
             _target_vals = path['target_val_q']
             n_data = target_vals.shape[0]
             _obses, _acts = path['obs'][:n_data], path['act'][:n_data]
+            # _obses, _acts = path['obs'][:n_data], path['sampled_act'][:n_data]
             obses = np.vstack((_obses, obses))
             acts = np.vstack((_acts, acts))
             target_vals = np.vstack((_target_vals, target_vals))
@@ -51,8 +53,9 @@ class PendulumDataset(torch.utils.data.Dataset):
         if filenames is None:
             filenames = [
                 os.path.join("data", "Pendulum-v0", "SAC_L2-U256", "all_transition_L2-U256.pkl"),
-                os.path.join("data", "Pendulum-v0", "SAC_L2-U2048", "all_transition_L2-U2048.pkl"),
-                os.path.join("data", "Pendulum-v0", "SAC_L16-U256", "all_transition_L16-U256.pkl")]
+                # os.path.join("data", "Pendulum-v0", "SAC_L2-U2048", "all_transition_L2-U2048.pkl"),
+                # os.path.join("data", "Pendulum-v0", "SAC_L16-U256", "all_transition_L16-U256.pkl")
+            ]
         obses, acts, target_vals = load_trajectories(filenames)
         for obs, act, target_val in zip(obses, acts, target_vals):
             self.data.append((obs, act))
@@ -83,11 +86,12 @@ def load_rl_dataset(env_name, split_ratio, batch_size):
     train_size = int(n_samples * split_ratio)
     val_size = n_samples - train_size
 
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, [train_size, val_size], generator=torch.Generator().manual_seed(42))
+    # train_dataset, val_dataset = torch.utils.data.random_split(
+    #     dataset, [train_size, val_size], generator=torch.Generator().manual_seed(42))
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    test_loader = None
+    # test_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
 
 
