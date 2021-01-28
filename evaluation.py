@@ -9,6 +9,8 @@ import torch.nn.functional as F
 import time
 from torch.autograd.variable import Variable
 
+from torchrl.algos.sac import CriticQ
+
 def eval_loss(net, criterion, loader, use_cuda=False):
     """
     Evaluate the loss value for a given 'net' on the dataset provided by the loader.
@@ -31,7 +33,24 @@ def eval_loss(net, criterion, loader, use_cuda=False):
     net.eval()
 
     with torch.no_grad():
-        if isinstance(criterion, nn.CrossEntropyLoss):
+        if isinstance(net, CriticQ):
+            for batch_idx, (inputs, targets) in enumerate(loader):
+                batch_size = inputs[0].size(0)
+                total += batch_size
+                states, actions = inputs
+                states = Variable(states)
+                actions = Variable(actions)
+                targets = Variable(targets)
+                if use_cuda:
+                    states, actions, targets = states.cuda(), actions.cuda(), targets.cuda()
+                outputs = net(torch.cat([states, actions], dim=1))
+                loss = criterion(outputs, targets)
+                total_loss += loss.item()*batch_size
+                # _, predicted = torch.max(outputs.data, 1)
+                # correct += predicted.eq(targets).sum().item()
+                correct += 0.
+
+        elif isinstance(criterion, nn.CrossEntropyLoss):
             for batch_idx, (inputs, targets) in enumerate(loader):
                 batch_size = inputs.size(0)
                 total += batch_size

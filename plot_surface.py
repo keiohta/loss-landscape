@@ -80,13 +80,15 @@ def crunch(surf_file, net, w, s, d, dataloader, loss_key, acc_key, comm, rank, a
         using MPI reduce.
     """
 
+    is_rl_exp = args.exp_name is not None
+
     f = h5py.File(surf_file, 'r+' if rank == 0 else 'r')
     losses, accuracies = [], []
     xcoordinates = f['xcoordinates'][:]
     ycoordinates = f['ycoordinates'][:] if 'ycoordinates' in f.keys() else None
 
     if loss_key not in f.keys():
-        shape = xcoordinates.shape if ycoordinates is None else (len(xcoordinates),len(ycoordinates))
+        shape = xcoordinates.shape if ycoordinates is None else (len(xcoordinates), len(ycoordinates))
         losses = -np.ones(shape=shape)
         accuracies = -np.ones(shape=shape)
         if rank == 0:
@@ -101,12 +103,12 @@ def crunch(surf_file, net, w, s, d, dataloader, loss_key, acc_key, comm, rank, a
     # stored in 'd') are stored in 'coords'.
     inds, coords, inds_nums = scheduler.get_job_indices(losses, xcoordinates, ycoordinates, comm)
 
-    print('Computing %d values for rank %d'% (len(inds), rank))
+    print('Computing %d values for rank %d' % (len(inds), rank))
     start_time = time.time()
     total_sync = 0.0
 
     criterion = nn.CrossEntropyLoss()
-    if args.loss_name == 'mse':
+    if args.loss_name == 'mse' or is_rl_exp:
         criterion = nn.MSELoss()
 
     # Loop over all uncalculated loss values
@@ -213,8 +215,23 @@ if __name__ == '__main__':
     parser.add_argument('--show', action='store_true', default=False, help='show plotted figures')
     parser.add_argument('--log', action='store_true', default=False, help='use log scale for loss values')
     parser.add_argument('--plot', action='store_true', default=False, help='plot figures after computation')
+    # RL parameters
+    parser.add_argument('--exp-name', type=str, default=None)
+    parser.add_argument('--env-name', type=str, default="Pendulum-v0")
 
     args = parser.parse_args()
+
+    # --------------------------------------------------------------------------
+    # RL setup
+    # --------------------------------------------------------------------------
+    is_rl_exp = args.exp_name is not None
+    if is_rl_exp:
+        str_layer, str_unit = args.exp_name.split("-")
+        n_layer = int(str_layer[1])
+        n_unit = int(str_unit[1:])
+        args.dataset = args.env_name
+        args.model_file = os.path.join("data", args.env_name, f"SAC_{args.exp_name}",
+                                       f"critic_q_0100000_{args.exp_name}.pth")
 
     torch.manual_seed(123)
     # --------------------------------------------------------------------------
@@ -251,9 +268,12 @@ if __name__ == '__main__':
     # --------------------------------------------------------------------------
     # Load models and extract parameters
     # --------------------------------------------------------------------------
-    net = model_loader.load(args.dataset, args.model, args.model_file)
-    w = net_plotter.get_weights(net) # initial parameters
-    s = copy.deepcopy(net.state_dict()) # deepcopy since state_dict are references
+    if is_rl_exp:
+        net = model_loader.load_rl_model(n_layer, n_unit, args.env_name)
+    else:
+        net = model_loader.load(args.dataset, args.model, args.model_file)
+    w = net_plotter.get_weights(net)  # initial parameters
+    s = copy.deepcopy(net.state_dict())  # deepcopy since state_dict are references
     if args.ngpu > 1:
         # data parallel with multiple GPUs on a single node
         net = nn.DataParallel(net, device_ids=range(torch.cuda.device_count()))
@@ -283,15 +303,18 @@ if __name__ == '__main__':
     # Setup dataloader
     # --------------------------------------------------------------------------
     # download CIFAR10 if it does not exit
-    if rank == 0 and args.dataset == 'cifar10':
+    if rank == 0 and args.dataset == 'cifar10' and not is_rl_exp:
         torchvision.datasets.CIFAR10(root=args.dataset + '/data', train=True, download=True)
 
     mpi.barrier(comm)
 
-    trainloader, testloader = dataloader.load_dataset(args.dataset, args.datapath,
-                                args.batch_size, args.threads, args.raw_data,
-                                args.data_split, args.split_idx,
-                                args.trainloader, args.testloader)
+    if is_rl_exp:
+        train_loader, test_loader = load_rl_dataset(args.env_name, split_ratio=0.8, batch_size=256)
+    else:
+        train_loader, test_loader = dataloader.load_dataset(args.dataset, args.datapath,
+                                                            args.batch_size, args.threads, args.raw_data,
+                                                            args.data_split, args.split_idx,
+                                                            args.trainloader, args.testloader)
 
     # --------------------------------------------------------------------------
     # Start the computation
