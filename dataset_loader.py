@@ -37,7 +37,7 @@ def load_trajectories(filenames):
             obses = np.vstack((_obses, obses))
             acts = np.vstack((_acts, acts))
             target_vals = np.vstack((_target_vals, target_vals))
-    return obses[:1000], acts[:1000], target_vals[:1000]
+    return obses, acts, target_vals
 
 
 class PendulumDataset(torch.utils.data.Dataset):
