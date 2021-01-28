@@ -227,7 +227,7 @@ if __name__ == '__main__':
     is_rl_exp = args.exp_name is not None
     if is_rl_exp:
         str_layer, str_unit = args.exp_name.split("-")
-        n_layer = int(str_layer[1])
+        n_layer = int(str_layer[1:])
         n_unit = int(str_unit[1:])
         args.dataset = args.env_name
         args.model_file = os.path.join("data", args.env_name, f"SAC_{args.exp_name}",
@@ -310,7 +310,7 @@ if __name__ == '__main__':
     mpi.barrier(comm)
 
     if is_rl_exp:
-        train_loader, test_loader = load_rl_dataset(args.env_name, split_ratio=1.0, batch_size=args.batch_size)
+        train_loader, test_loader = load_rl_dataset(args.env_name, args.exp_name, split_ratio=1.0, batch_size=args.batch_size)
     else:
         train_loader, test_loader = dataloader.load_dataset(args.dataset, args.datapath,
                                                             args.batch_size, args.threads, args.raw_data,

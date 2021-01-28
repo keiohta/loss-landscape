@@ -75,5 +75,16 @@ critic_q_0030000_L2-U256.pth  critic_q_0100000_L2-U256.pth
 2Dのコンター図の生成
 
 ```bash
-mpirun -n 4 python plot_surface.py --mpi --cuda --exp-name L2-U256 --model custom --x=-1:1:51 --y=-1:1:51 --dir_type weights --xnorm filter --xig biasbn --ynorm filter --yignore biasbn  --plot
+$ mpirun -n 4 python plot_surface.py --mpi --cuda --exp-name L2-U256 --model custom --x=-1:1:51 --y=-1:1:51 --dir_type weights --xnorm filter --xig biasbn --ynorm filter --yignore biasbn  --plot
+$ mpirun -n 4 python plot_surface.py --mpi --cuda --exp-name L2-U2048 --model custom --x=-1:1:51 --y=-1:1:51 --dir_type weights --xnorm filter --xig biasbn --ynorm filter --yignore biasbn  --plot
+$ mpirun -n 4 python plot_surface.py --mpi --cuda --exp-name L16-U256 --model custom --x=-1:1:51 --y=-1:1:51 --dir_type weights --xnorm filter --xig biasbn --ynorm filter --yignore biasbn  --plot
 ```
+
+3D
+
+```bash
+$ python h52vtp.py --surf_file  data/Pendulum-v0/SAC_L2-U256/critic_q_0100000_L2-U256.pth_weights_xignore=biasbn_xnorm=filter_yignore=biasbn_ynorm=filter.h5_[-1.0,1.0,51]x[-1.0,1.0,51].h5 --surf_name train_loss --zmax 1000000 --log
+$ python h52vtp.py --surf_file  data/Pendulum-v0/SAC_L2-U2048/critic_q_0100000_L2-U2048.pth_weights_xignore=biasbn_xnorm=filter_yignore=biasbn_ynorm=filter.h5_[-1.0,1.0,51]x[-1.0,1.0,51].h5 --surf_name train_loss --zmax 1000000 --log
+$ python h52vtp.py --surf_file  data/Pendulum-v0/SAC_L16-U256/critic_q_0100000_L16-U256.pth_weights_xignore=biasbn_xnorm=filter_yignore=biasbn_ynorm=filter.h5_[-1.0,1.0,51]x[-1.0,1.0,51].h5 --surf_name train_loss --zmax 1000000 --log
+```
+

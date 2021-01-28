@@ -44,7 +44,7 @@ def load_trajectories(filenames):
 
 class PendulumDataset(torch.utils.data.Dataset):
 
-    def __init__(self, filenames=None, transform=None):
+    def __init__(self, exp_name, filenames=None, transform=None):
         self.transform = transform
 
         self.data = []
@@ -52,7 +52,7 @@ class PendulumDataset(torch.utils.data.Dataset):
 
         if filenames is None:
             filenames = [
-                os.path.join("data", "Pendulum-v0", "SAC_L2-U256", "all_transition_L2-U256.pkl"),
+                os.path.join("data", "Pendulum-v0", f"SAC_{exp_name}", f"all_transition_{exp_name}.pkl"),
                 # os.path.join("data", "Pendulum-v0", "SAC_L2-U2048", "all_transition_L2-U2048.pkl"),
                 # os.path.join("data", "Pendulum-v0", "SAC_L16-U256", "all_transition_L16-U256.pkl")
             ]
@@ -76,9 +76,9 @@ class PendulumDataset(torch.utils.data.Dataset):
         return out_data, out_label
 
 
-def load_rl_dataset(env_name, split_ratio, batch_size):
+def load_rl_dataset(env_name, exp_name, split_ratio, batch_size):
     if env_name == "Pendulum-v0":
-        dataset = PendulumDataset()
+        dataset = PendulumDataset(exp_name)
     else:
         raise ValueError(f"Dataset of {env_name} is not supported.")
 
