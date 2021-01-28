@@ -74,6 +74,6 @@ critic_q_0030000_L2-U256.pth  critic_q_0100000_L2-U256.pth
 
 2Dのコンター図の生成
 
-```
+```bash
 mpirun -n 4 python plot_surface.py --mpi --cuda --exp-name L2-U256 --model custom --x=-1:1:51 --y=-1:1:51 --dir_type weights --xnorm filter --xig biasbn --ynorm filter --yignore biasbn  --plot
 ```

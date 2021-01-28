@@ -272,6 +272,7 @@ if __name__ == '__main__':
         net = model_loader.load_rl_model(n_layer, n_unit, args.env_name)
     else:
         net = model_loader.load(args.dataset, args.model, args.model_file)
+
     w = net_plotter.get_weights(net)  # initial parameters
     s = copy.deepcopy(net.state_dict())  # deepcopy since state_dict are references
     if args.ngpu > 1:
@@ -309,7 +310,7 @@ if __name__ == '__main__':
     mpi.barrier(comm)
 
     if is_rl_exp:
-        train_loader, test_loader = load_rl_dataset(args.env_name, split_ratio=0.8, batch_size=256)
+        train_loader, test_loader = load_rl_dataset(args.env_name, split_ratio=1.0, batch_size=args.batch_size)
     else:
         train_loader, test_loader = dataloader.load_dataset(args.dataset, args.datapath,
                                                             args.batch_size, args.threads, args.raw_data,

@@ -38,12 +38,13 @@ def eval_loss(net, criterion, loader, use_cuda=False):
                 batch_size = inputs[0].size(0)
                 total += batch_size
                 states, actions = inputs
-                states = Variable(states)
-                actions = Variable(actions)
-                targets = Variable(targets)
+                # states = Variable(states)
+                # actions = Variable(actions)
+                # targets = Variable(targets)
                 if use_cuda:
                     states, actions, targets = states.cuda(), actions.cuda(), targets.cuda()
-                outputs = net(torch.cat([states, actions], dim=1))
+                features = torch.cat([states, actions], dim=1)
+                outputs = net(features)
                 loss = criterion(outputs, targets)
                 total_loss += loss.item()*batch_size
                 # _, predicted = torch.max(outputs.data, 1)
